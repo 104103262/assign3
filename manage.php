@@ -5,10 +5,6 @@ include 'settings.php'; // Include the database connection settings
 $jobidQuery = $nameQuery = $deleteJobId = $eoiNumber = $status = "";
 $results = [];
 
-// Fetch all unique job reference numbers for the dropdown
-$sql = "SELECT DISTINCT jobid FROM eoi";
-$jobids = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
-
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["jobidQuery"])) {
@@ -115,13 +111,7 @@ $conn->close();
 
 <form action="manage.php" method="post">
     <label for="jobidQuery">List all EOIs for a particular position:</label>
-    <select name="jobidQuery" id="jobidQuery">
-        <?php foreach ($jobids as $job) : ?>
-            <option value="<?php echo $job["jobid"]; ?>" <?php if ($jobidQuery == $job["jobid"]) echo "selected"; ?>>
-                <?php echo $job["jobid"]; ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+    <input type="text" name="jobidQuery" id="jobidQuery" value="<?php echo $jobidQuery; ?>">
     <input type="submit" value="Search">
 </form>
 
