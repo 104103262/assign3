@@ -11,17 +11,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
-    <header class="header">
-        <a href="index.php" class="logo">InnoTech</a>
-        <nav class="nav-items">
-          <a href="index.php">Home</a>
-          <a href="jobs.php">Jobs</a>
-          <a href="apply.php">Apply</a>
-          <a href="about.php">About</a>
-          <a href="enhancements.php">Enhancement #1</a>
-          <a href="enhancements2.php">Enhancement #2</a>
-        </nav>
-    </header>
+<header class="header">
+    <a href="index.php" class="logo">InnoTech</a>
+    <nav class="nav-items">
+        <a href="index.php">Home</a>
+        <a href="jobs.php">Jobs</a>
+        <a href="apply.php">Apply</a>
+        <a href="about.php">About</a>
+        <a href="enhancements.php">Enhancement #1</a>
+        <a href="enhancements2.php">Enhancement #2</a>
+        <a href="phpenhancements.php">PHP Enhancements</a>
+        <a href="manage.php">Manage</a>
+    </nav>
+</header>
     <h1>Apply Form</h1>
     <!-- Updated the action attribute to point to processEOI.php -->
     <form method="post" action="processEOI.php" id="applicationForm" novalidate="novalidate">

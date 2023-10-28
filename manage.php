@@ -1,26 +1,51 @@
 <?php
 include 'settings.php'; // Include the database connection settings
 
+date_default_timezone_set('Australia/Sydney'); // Set the timezone to Sydney, Australia
+
 // Initialize variables
-$jobidQuery = $nameQuery = $deleteJobId = $eoiNumber = $status = "";
+$jobidQuery = $givenNameQuery = $familyNameQuery = $deleteJobId = $eoiNumber = $status = "";
 $results = [];
+
+// Fetch all unique jobids for the dropdown
+$sql = "SELECT DISTINCT jobid FROM eoi";
+$jobids = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["jobidQuery"])) {
         $jobidQuery = $_POST["jobidQuery"];
-        $sql = "SELECT * FROM eoi WHERE jobid = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $jobidQuery);
-        $stmt->execute();
-        $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt->close();
-    } elseif (isset($_POST["nameQuery"])) {
-        $nameQuery = $_POST["nameQuery"];
-        $sql = "SELECT * FROM eoi WHERE given_name LIKE ? OR family_name LIKE ?";
-        $stmt = $conn->prepare($sql);
-        $nameQuery = "%" . $nameQuery . "%";
-        $stmt->bind_param("ss", $nameQuery, $nameQuery);
+        if ($jobidQuery == "allEOIs") {
+            $sql = "SELECT * FROM eoi";
+            $results = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
+        } else {
+            $sql = "SELECT * FROM eoi WHERE jobid = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $jobidQuery);
+            $stmt->execute();
+            $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+        }
+    } elseif (isset($_POST["givenNameQuery"]) || isset($_POST["familyNameQuery"])) {
+        $givenNameQuery = $_POST["givenNameQuery"];
+        $familyNameQuery = $_POST["familyNameQuery"];
+        $sqlGivenName = "%" . $givenNameQuery . "%";
+        $sqlFamilyName = "%" . $familyNameQuery . "%";
+
+        if (!empty($givenNameQuery) && !empty($familyNameQuery)) {
+            $sql = "SELECT * FROM eoi WHERE given_name LIKE ? AND family_name LIKE ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ss", $sqlGivenName, $sqlFamilyName);
+        } elseif (!empty($givenNameQuery)) {
+            $sql = "SELECT * FROM eoi WHERE given_name LIKE ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $sqlGivenName);
+        } else {
+            $sql = "SELECT * FROM eoi WHERE family_name LIKE ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $sqlFamilyName);
+        }
+
         $stmt->execute();
         $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
@@ -41,10 +66,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     }
 }
-
-// Fetch all EOIs
-$sql = "SELECT * FROM eoi";
-$allEOIs = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
 $conn->close();
 ?>
@@ -104,83 +125,92 @@ $conn->close();
     </style>
 </head>
 <body>
-
 <h2>HR Manager Queries</h2>
+
+<p>Current Date and Time: <?php echo date('l, d F Y, h:i:s A'); ?></p> <!-- Display the current date and time -->
 
 <a href="index.php" class="home-btn">Home</a>
 
 <form action="manage.php" method="post">
-    <label for="jobidQuery">List all EOIs for a particular position:</label>
-    <input type="text" name="jobidQuery" id="jobidQuery" value="<?php echo $jobidQuery; ?>">
+    <label for="jobidQuery">List EOIs by Job ID:</label>
+    <select name="jobidQuery" id="jobidQuery">
+        <option value="allEOIs">All EOIs</option>
+        <?php foreach ($jobids as $job) : ?>
+            <option value="<?php echo $job["jobid"]; ?>"><?php echo $job["jobid"]; ?></option>
+        <?php endforeach; ?>
+    </select>
     <input type="submit" value="Search">
 </form>
 
 <form action="manage.php" method="post">
-    <label for="nameQuery">List all EOIs for a particular applicant:</label>
-    <input type="text" name="nameQuery" id="nameQuery" value="<?php echo $nameQuery; ?>">
+    <label for="givenNameQuery">List EOIs by Applicant Name:</label>
+    <input type="text" name="givenNameQuery" id="givenNameQuery" placeholder="Given Name" value="<?php echo $givenNameQuery; ?>">
+    <input type="text" name="familyNameQuery" id="familyNameQuery" placeholder="Family Name" value="<?php echo $familyNameQuery; ?>">
     <input type="submit" value="Search">
 </form>
 
 <form action="manage.php" method="post">
     <label for="deleteJobId">Delete all EOIs with a specified job reference number:</label>
-    <input type="text" name="deleteJobId" id="deleteJobId" value="<?php echo $deleteJobId; ?>">
+    <input type="text" name="deleteJobId" id="deleteJobId">
     <input type="submit" value="Delete">
 </form>
 
 <form action="manage.php" method="post">
     <label for="eoiNumber">Change the Status of an EOI:</label>
-    <input type="number" name="eoiNumber" id="eoiNumber" value="<?php echo $eoiNumber; ?>">
+    <input type="number" name="eoiNumber" id="eoiNumber">
     <select name="status" id="status">
-        <option value="New" <?php if ($status == "New") echo "selected"; ?>>New</option>
-        <option value="Current" <?php if ($status == "Current") echo "selected"; ?>>Current</option>
-        <option value="Final" <?php if ($status == "Final") echo "selected"; ?>>Final</option>
+        <option value="New">New</option>
+        <option value="Current">Current</option>
+        <option value="Final">Final</option>
     </select>
     <input type="submit" value="Update">
 </form>
 
-<h2>All EOIs</h2>
-<table>
-    <thead>
-    <tr>
-        <th>EOI Number</th>
-        <th>Job ID</th>
-        <th>Given Name</th>
-        <th>Family Name</th>
-        <th>Birthday</th>
-        <th>Gender</th>
-        <th>Street Address</th>
-        <th>Suburb</th>
-        <th>State</th>
-        <th>Post</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Skill</th>
-        <th>Other Skills</th>
-        <th>Status</th>
-    </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($allEOIs as $eoi) : ?>
+<?php if (!empty($results)) : ?>
+    <h2>Results</h2>
+    <table>
+        <thead>
         <tr>
-            <td><?php echo $eoi["EOInumber"]; ?></td>
-            <td><?php echo $eoi["jobid"]; ?></td>
-            <td><?php echo $eoi["given_name"]; ?></td>
-            <td><?php echo $eoi["family_name"]; ?></td>
-            <td><?php echo $eoi["birthday"]; ?></td>
-            <td><?php echo $eoi["gender"]; ?></td>
-            <td><?php echo $eoi["street_address"]; ?></td>
-            <td><?php echo $eoi["suburb"]; ?></td>
-            <td><?php echo $eoi["state"]; ?></td>
-            <td><?php echo $eoi["post"]; ?></td>
-            <td><?php echo $eoi["email"]; ?></td>
-            <td><?php echo $eoi["phone"]; ?></td>
-            <td><?php echo $eoi["skill"]; ?></td>
-            <td><?php echo $eoi["otherskills"]; ?></td>
-            <td><?php echo $eoi["Status"]; ?></td>
+            <th>EOI Number</th>
+            <th>Job ID</th>
+            <th>Given Name</th>
+            <th>Family Name</th>
+            <th>Birthday</th>
+            <th>Gender</th>
+            <th>Street Address</th>
+            <th>Suburb</th>
+            <th>State</th>
+            <th>Post</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Skill</th>
+            <th>Other Skills</th>
+            <th>Status</th>
         </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        <?php foreach ($results as $eoi) : ?>
+            <tr>
+                <td><?php echo $eoi["EOInumber"]; ?></td>
+                <td><?php echo $eoi["jobid"]; ?></td>
+                <td><?php echo $eoi["given_name"]; ?></td>
+                <td><?php echo $eoi["family_name"]; ?></td>
+                <td><?php echo $eoi["birthday"]; ?></td>
+                <td><?php echo $eoi["gender"]; ?></td>
+                <td><?php echo $eoi["street_address"]; ?></td>
+                <td><?php echo $eoi["suburb"]; ?></td>
+                <td><?php echo $eoi["state"]; ?></td>
+                <td><?php echo $eoi["post"]; ?></td>
+                <td><?php echo $eoi["email"]; ?></td>
+                <td><?php echo $eoi["phone"]; ?></td>
+                <td><?php echo $eoi["skill"]; ?></td>
+                <td><?php echo $eoi["otherskills"]; ?></td>
+                <td><?php echo $eoi["Status"]; ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php endif; ?>
 
 </body>
 </html>
