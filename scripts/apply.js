@@ -52,22 +52,48 @@ function displayError(message) {
 
 function validateDOB() {
     const dob = document.getElementById("birthday").value;
-    const dobPattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-    const dobMatch = dob.match(dobPattern);
-    if (!dobMatch) {
-        displayError("Invalid date format. Use dd/mm/yyyy.");
+    const dobDate = new Date(dob);
+    const currentDate = new Date();
+
+    // Check if the date is valid
+    if (isNaN(dobDate.getTime())) {
+        displayError("Invalid date format. Use yyyy-mm-dd.");
         return false;
     }
 
-    const dobDate = new Date(dobMatch[3], dobMatch[2] - 1, dobMatch[1]);
-    const currentDate = new Date();
     const age = currentDate.getFullYear() - dobDate.getFullYear();
+    const m = currentDate.getMonth() - dobDate.getMonth();
+    if (m < 0 || (m === 0 && currentDate.getDate() < dobDate.getDate())) {
+        age--;
+    }
 
     if (age < 15 || age > 80) {
         displayError("Age should be between 15 and 80.");
         return false;
     }
 
+    return true;
+}
+
+function validateGender() {
+    const male = document.getElementById("male");
+    const female = document.getElementById("female");
+
+    if (!male.checked && !female.checked) {
+        displayError("Please select a gender.");
+        return false;
+    }
+    return true;
+}
+
+function validateState() {
+    const state = document.getElementById("state").value;
+    const validStates = ["vic", "nsw", "qld", "nt", "wa", "sa", "tas", "act"];
+
+    if (!validStates.includes(state)) {
+        displayError("Please select a valid state.");
+        return false;
+    }
     return true;
 }
 
@@ -114,7 +140,15 @@ function storeFormData() {
         return false;
     }
 
+    if (!validateGender()) {
+        return false;
+    }
+
     if (!validateStateAndPostcode()) {
+        return false;
+    }
+
+    if (!validateState()) {
         return false;
     }
 

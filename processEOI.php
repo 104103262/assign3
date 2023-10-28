@@ -34,10 +34,11 @@ if (strlen($given_name) > 20 || !preg_match("/^[a-zA-Z]+$/", $given_name)) {
 if (strlen($family_name) > 20 || !preg_match("/^[a-zA-Z]+$/", $family_name)) {
     $errors[] = "Invalid Family name format.";
 }
-if (!preg_match("/^\d{1,2}\/\d{1,2}\/\d{4}$/", $birthday)) {
+if (!preg_match("/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/", $birthday, $matches)) {
     $errors[] = "Invalid Birthday format.";
 }
-if (!in_array($gender, ['Male', 'Female'])) {
+
+if (!in_array($gender, ['male', 'female'])) {
     $errors[] = "Invalid Gender selection.";
 }
 if (strlen($street_address) > 40) {
@@ -46,7 +47,7 @@ if (strlen($street_address) > 40) {
 if (strlen($suburb) > 40) {
     $errors[] = "Suburb/town is too long.";
 }
-if (!in_array($state, ['VIC', 'NSW', 'QLD', 'NT', 'WA', 'SA', 'TAS', 'ACT'])) {
+if (!in_array($state, ['vic', 'nsw', 'qld', 'nt', 'wa', 'sa', 'tas', 'act'])) {
     $errors[] = "Invalid State selection.";
 }
 if (!preg_match("/^\d{4}$/", $post)) {

@@ -23,8 +23,8 @@
         </nav>
     </header>
     <h1>Apply Form</h1>
-
-    <form method="post" action="https://mercury.swin.edu.au/it000000/formtest.php" id="applicationForm">
+    <!-- Updated the action attribute to point to processEOI.php -->
+    <form method="post" action="processEOI.php" id="applicationForm" novalidate="novalidate">
         <fieldset>
             <legend>Detailed Information</legend>
             
@@ -42,10 +42,10 @@
                 <label for="family_name">Family name</label> 
                 <input type="text" name="family_name" id="family_name" maxlength="15" pattern="^[a-zA-z]+$" required="required"/>
             </p>
-    
+
             <p>
                 <label for="birthday">Birthday:</label>
-                <input type="text" id="birthday" name="birthday" pattern="\d{1,2}/\d{1,2}/\d{4}" placeholder="dd/mm/yyyy" required>
+                <input type="date" id="birthday" name="birthday" required>
             </p>
     
             <fieldset>
